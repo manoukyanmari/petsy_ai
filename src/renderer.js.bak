@@ -1,0 +1,650 @@
+// Petsy Renderer Process - Handles UI and communicates with Python Simulator
+
+class PetsyApp {
+    constructor() {
+        console.log('🔧 PetsyApp constructor called');
+        this.isRunning = false;
+        this.simulationState = {
+            time: 0,
+            collisions: 0,
+            robot_x: 100,
+            robot_y: 100,
+            robot_angle: 0,
+            status: 'ready',
+            success: false,
+            obstacles: [],  // Will be populated after init
+            target: { x: 700, y: 500 }
+        };
+        this.currentPet = 'parrot';
+        this.currentDifficulty = 'normal';
+        this.successCount = 0;
+        this.totalRuns = 0;
+        
+        console.log('✓ Properties initialized');
+        this.initElements();
+        console.log('✓ Elements initialized');
+        this.setupEventListeners();
+        console.log('✓ Event listeners setup');
+        this.initializeApp();
+        console.log('✓ App initializing...');
+    }
+
+    initElements() {
+        // Buttons
+        this.startBtn = document.getElementById('start-btn');
+        this.stopBtn = document.getElementById('stop-btn');
+        this.resetBtn = document.getElementById('reset-btn');
+        
+        console.log('✓ Buttons found:');
+        console.log('  START:', this.startBtn ? 'Yes' : 'NO ❌');
+        console.log('  STOP:', this.stopBtn ? 'Yes' : 'NO ❌');
+        console.log('  RESET:', this.resetBtn ? 'Yes' : 'NO ❌');
+        
+        // Selectors
+        this.petSelector = document.getElementById('pet-design');
+        this.difficultySelector = document.getElementById('difficulty');
+        
+        console.log('✓ Selectors found:');
+        console.log('  Pet:', this.petSelector ? 'Yes' : 'NO ❌');
+        console.log('  Difficulty:', this.difficultySelector ? 'Yes' : 'NO ❌');
+        
+        // Canvas
+        this.canvas = document.getElementById('simulation-canvas');
+        this.ctx = this.canvas.getContext('2d');
+        
+        console.log('✓ Canvas:', this.canvas ? 'Yes' : 'NO ❌');
+        
+        // Stats
+        this.statusEl = document.getElementById('status');
+        this.timeEl = document.getElementById('time');
+        this.collisionsEl = document.getElementById('collisions');
+        this.successRateEl = document.getElementById('success-rate');
+        
+        // Modal
+        this.aboutModal = document.getElementById('about-modal');
+        this.closeAboutBtn = document.getElementById('close-about');
+    }
+
+    setupEventListeners() {
+        // Button events - SIMPLE synchronous handlers
+        this.startBtn.addEventListener('click', () => {
+            console.log('👉 START BUTTON CLICKED');
+            this.startSimulation();
+        });
+        this.stopBtn.addEventListener('click', () => {
+            console.log('👉 STOP BUTTON CLICKED');
+            this.stopSimulation();
+        });
+        this.resetBtn.addEventListener('click', () => {
+            console.log('👉 RESET BUTTON CLICKED');
+            this.resetSimulation();
+        });
+        
+        // Selector events
+        this.petSelector.addEventListener('change', (e) => {
+            console.log('👉 Pet changed to:', e.target.value);
+            this.currentPet = e.target.value;
+            this.drawInitialCanvas();
+        });
+        
+        this.difficultySelector.addEventListener('change', (e) => {
+            console.log('👉 Difficulty changed to:', e.target.value);
+            this.currentDifficulty = e.target.value;
+            this.loadObstacles();
+        });
+        
+        // Modal events
+        if (this.closeAboutBtn) {
+            this.closeAboutBtn.addEventListener('click', () => this.closeAbout());
+        }
+        
+        // Electron IPC events (if available)
+        if (window.petsy) {
+            window.petsy.onSimulationStarted(() => {
+                console.log('Simulation started via bridge');
+            });
+            
+            window.petsy.onSimulationStopped(() => {
+                console.log('Simulation stopped via bridge');
+            });
+            
+            window.petsy.onSimulationReset(() => {
+                console.log('Simulation reset via bridge');
+            });
+            
+            window.petsy.onShowAbout(() => {
+                this.showAbout();
+            });
+        }
+    }
+
+    async initializeApp() {
+        // Get version
+        if (window.petsy) {
+            try {
+                const version = await window.petsy.getVersion();
+                document.getElementById('version').textContent = version;
+                document.getElementById('footer-version').textContent = version;
+            } catch (error) {
+                console.log('Running in development mode');
+            }
+        }
+        
+        // Wait a bit for bridge to be ready
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        // Load obstacles for initial difficulty
+        console.log('Initializing: Loading obstacles...');
+        await this.loadObstacles();
+        
+        // If no obstacles loaded, use placeholder (for debugging)
+        if (!this.simulationState.obstacles || this.simulationState.obstacles.length === 0) {
+            console.warn('No obstacles loaded, using placeholder data');
+            this.generatePlaceholderObstacles();
+        }
+        
+        // Draw initial state
+        console.log('Initializing: Drawing canvas...');
+        this.drawInitialCanvas();
+        
+        // Start fetching state from Python bridge
+        console.log('Initializing: Starting state polling...');
+        this.startStatePolling();
+        
+        console.log('Initialization complete!');
+    }
+
+    generatePlaceholderObstacles() {
+        /**Generate placeholder obstacles for debugging if API fails*/
+        const obstacles = [];
+        const positions = [
+            { x: 200, y: 150, w: 40, h: 40 },
+            { x: 300, y: 250, w: 50, h: 30 },
+            { x: 150, y: 400, w: 60, h: 40 },
+            { x: 450, y: 300, w: 35, h: 45 },
+            { x: 550, y: 150, w: 40, h: 40 },
+            { x: 400, y: 500, w: 50, h: 30 },
+            { x: 600, y: 450, w: 45, h: 35 }
+        ];
+        for (const pos of positions) {
+            obstacles.push({
+                x: pos.x,
+                y: pos.y,
+                width: pos.w,
+                height: pos.h
+            });
+        }
+        this.simulationState.obstacles = obstacles;
+        console.log('Generated placeholder obstacles:', obstacles);
+    }
+
+    async loadObstacles() {
+        /**Fetch obstacles and target from Python bridge based on difficulty*/
+        console.log('📥 loadObstacles() called');
+        console.log('   currentDifficulty:', this.currentDifficulty);
+        console.log('   window.petsy available:', !!window.petsy);
+        
+        if (!window.petsy) {
+            console.warn('❌ window.petsy not available');
+            return;
+        }
+        
+        try {
+            // First, set the difficulty on the bridge
+            console.log(`🔧 Setting difficulty to: ${this.currentDifficulty}`);
+            await window.petsy.setDifficulty(this.currentDifficulty);
+            console.log('✓ Difficulty set');
+            
+            // Then get the obstacles
+            console.log('📤 Calling getObstacles...');
+            const data = await window.petsy.getObstacles();
+            console.log('📥 Got response:', data);
+            
+            if (data && !data.error) {
+                this.simulationState.obstacles = data.obstacles || [];
+                this.simulationState.target = data.target || { x: 700, y: 500 };
+                console.log(`✅ Loaded ${this.simulationState.obstacles.length} obstacles for ${this.currentDifficulty}`);
+                console.log('   Obstacles:', this.simulationState.obstacles);
+            } else if (data && data.error) {
+                console.warn('❌ Bridge error:', data.error);
+            }
+        } catch (error) {
+            console.warn('❌ Error loading obstacles:', error);
+        }
+    }
+
+    startStatePolling() {
+        /**Poll Python bridge for simulation state every 30ms (higher frequency)*/
+        if (this.pollInterval) clearInterval(this.pollInterval);
+        
+        this.pollInterval = setInterval(() => {
+            this.updateStateFromBridge();
+        }, 30);  // 30ms = ~33 FPS updates, fast enough for smooth animation
+    }
+
+    async updateStateFromBridge() {
+        /**Fetch current state from Python simulator*/
+        if (!window.petsy) {
+            console.warn('window.petsy not available');
+            return;
+        }
+        
+        try {
+            const state = await window.petsy.getState();
+            if (state && !state.error) {
+                // Update state, but preserve obstacles and target
+                this.simulationState.time = state.time;
+                this.simulationState.collisions = state.collisions;
+                this.simulationState.robot_x = state.robot_x;
+                this.simulationState.robot_y = state.robot_y;
+                this.simulationState.robot_angle = state.robot_angle;
+                this.simulationState.status = state.status;
+                this.simulationState.success = state.success;
+                
+                // Always draw if running
+                if (this.isRunning) {
+                    this.drawSimulation();
+                    this.updateStats();
+                    
+                    // Check if simulation ended (success or failure)
+                    if (state.status === 'goal_reached') {
+                        console.log('✓ Goal reached!');
+                        this.successCount++;
+                        this.isRunning = false;
+                        this.startBtn.disabled = false;
+                        this.stopBtn.disabled = true;
+                    }
+                } else if (state.status === 'goal_reached') {
+                    // Simulation ended successfully
+                    this.successCount++;
+                    this.startBtn.disabled = false;
+                    this.stopBtn.disabled = true;
+                }
+                
+                this.totalRuns = Math.max(this.totalRuns, this.successCount);
+            } else if (state && state.error) {
+                console.warn('Bridge error:', state.error);
+            }
+        } catch (error) {
+            console.warn('State polling error:', error);
+        }
+    }
+
+    async startSimulation() {
+        console.log('🚀 startSimulation() called');
+        console.log('   isRunning:', this.isRunning);
+        console.log('   window.petsy available:', !!window.petsy);
+        
+        if (this.isRunning) {
+            console.log('❌ Already running, ignoring start');
+            return;
+        }
+        
+        this.isRunning = true;
+        console.log('✅ Set isRunning = true');
+        console.log('=== START SIMULATION ===');
+        console.log(`Difficulty: ${this.currentDifficulty}, Pet: ${this.currentPet}`);
+        
+        // Update button states immediately
+        this.startBtn.disabled = true;
+        this.stopBtn.disabled = false;
+        this.petSelector.disabled = true;
+        this.difficultySelector.disabled = true;
+        console.log('✓ Button states updated');
+        
+        // Update status
+        this.updateStatus('Running...');
+        
+        // START POLLING BEFORE CALLING BRIDGE
+        console.log('🔄 Starting state polling...');
+        this.startStatePolling();
+        
+        // Send to Python bridge
+        if (window.petsy) {
+            console.log('📤 Calling window.petsy.startSimulation()...');
+            try {
+                const result = await window.petsy.startSimulation({
+                    pet: this.currentPet,
+                    difficulty: this.currentDifficulty
+                });
+                console.log('✅ START response:', result);
+                console.log('🎮 Simulation running, polling state every 30ms!');
+            } catch (error) {
+                console.error('❌ Error starting simulation:', error);
+                this.isRunning = false;
+                this.startBtn.disabled = false;
+                this.stopBtn.disabled = true;
+            }
+        } else {
+            console.error('❌ ERROR: window.petsy not available!');
+            this.isRunning = false;
+            this.startBtn.disabled = false;
+            this.stopBtn.disabled = true;
+        }
+    }
+
+    async stopSimulation() {
+        console.log('⏸️  stopSimulation() called');
+        console.log('   isRunning:', this.isRunning);
+        console.log('=== STOP SIMULATION ===');
+        
+        if (!this.isRunning) {
+            console.log('❌ Not running, ignoring stop');
+            return;
+        }
+        
+        this.isRunning = false;
+        
+        // Update button states immediately
+        this.startBtn.disabled = false;
+        this.stopBtn.disabled = true;
+        this.petSelector.disabled = false;
+        this.difficultySelector.disabled = false;
+        console.log('✓ Button states: START=enabled, STOP=disabled');
+        
+        // Update status
+        this.updateStatus('Stopped');
+        
+        // Send to Python bridge
+        if (window.petsy) {
+            console.log('📤 Calling window.petsy.stopSimulation()');
+            try {
+                await window.petsy.stopSimulation();
+                console.log('✅ STOP request sent to bridge');
+            } catch (error) {
+                console.error('❌ Error stopping simulation:', error);
+            }
+        } else {
+            console.error('❌ ERROR: window.petsy not available!');
+        }
+        
+        // Redraw initial canvas
+        this.drawInitialCanvas();
+    }
+
+    async resetSimulation() {
+        this.isRunning = false;
+        
+        // Update button states
+        this.startBtn.disabled = false;
+        this.stopBtn.disabled = true;
+        this.petSelector.disabled = false;
+        this.difficultySelector.disabled = false;
+        
+        // Update status
+        this.updateStatus('Ready');
+        
+        // Send to Python bridge
+        if (window.petsy) {
+            try {
+                await window.petsy.resetSimulation();
+            } catch (error) {
+                console.error('Error resetting simulation:', error);
+            }
+        }
+        
+        // Reset stats
+        this.simulationState.time = 0;
+        this.simulationState.collisions = 0;
+        this.updateStats();
+        
+        // Redraw canvas
+        this.drawInitialCanvas();
+        console.log('Resetting simulation...');
+    }
+
+    drawInitialCanvas() {
+        // Clear canvas
+        this.ctx.fillStyle = '#1a1a1a';
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        
+        // Draw grid
+        this.drawGrid();
+        
+        // Draw obstacles
+        this.drawObstacles();
+        
+        // Draw target
+        this.drawTarget();
+        
+        // Draw robot/pet at start position (100, 100)
+        const x = 100;
+        const y = 100;
+        this.ctx.save();
+        this.ctx.translate(x, y);
+        
+        const petEmoji = {
+            'cat': '🐱',
+            'dog': '🐕',
+            'penguin': '🐧',
+            'alien': '👽',
+            'parrot': '🦜',
+            'robot_cute': '🤖'
+        }[this.currentPet] || '🦜';
+        
+        this.ctx.font = 'bold 40px Arial';
+        this.ctx.textAlign = 'center';
+        this.ctx.textBaseline = 'middle';
+        this.ctx.fillText(petEmoji, 0, 0);
+        
+        this.ctx.restore();
+    }
+
+    drawSimulation() {
+        // Clear canvas
+        this.ctx.fillStyle = '#1a1a1a';
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        
+        // Draw grid
+        this.drawGrid();
+        
+        // Draw obstacles
+        this.drawObstacles();
+        
+        // Draw target
+        this.drawTarget();
+        
+        // Draw robot/pet
+        this.drawRobot();
+        
+        // Draw stats overlay
+        this.drawStatsOverlay();
+    }
+
+    drawGrid() {
+        this.ctx.strokeStyle = '#333';
+        this.ctx.lineWidth = 1;
+        const gridSize = 50;
+        
+        for (let x = 0; x < this.canvas.width; x += gridSize) {
+            this.ctx.beginPath();
+            this.ctx.moveTo(x, 0);
+            this.ctx.lineTo(x, this.canvas.height);
+            this.ctx.stroke();
+        }
+        
+        for (let y = 0; y < this.canvas.height; y += gridSize) {
+            this.ctx.beginPath();
+            this.ctx.moveTo(0, y);
+            this.ctx.lineTo(this.canvas.width, y);
+            this.ctx.stroke();
+        }
+    }
+
+    drawObstacles() {
+        // Use obstacles from simulation state
+        const obstacles = this.simulationState.obstacles || [];
+        
+        console.log(`Drawing ${obstacles.length} obstacles`);
+        
+        this.ctx.fillStyle = '#ff6b6b';
+        this.ctx.strokeStyle = '#ff4444';
+        this.ctx.lineWidth = 2;
+        
+        for (const obstacle of obstacles) {
+            console.log(`Drawing obstacle at (${obstacle.x.toFixed(1)}, ${obstacle.y.toFixed(1)}) size ${obstacle.width.toFixed(1)}x${obstacle.height.toFixed(1)}`);
+            this.ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
+            this.ctx.strokeRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
+        }
+    }
+
+    drawTarget() {
+        const target = this.simulationState.target || { x: 700, y: 500 };
+        const x = target.x;
+        const y = target.y;
+        
+        // Draw target circle with golden glow
+        this.ctx.fillStyle = 'rgba(255, 212, 59, 0.3)';
+        this.ctx.beginPath();
+        this.ctx.arc(x, y, 35, 0, Math.PI * 2);
+        this.ctx.fill();
+        
+        // Draw target border
+        this.ctx.strokeStyle = '#ffd43b';
+        this.ctx.lineWidth = 3;
+        this.ctx.beginPath();
+        this.ctx.arc(x, y, 25, 0, Math.PI * 2);
+        this.ctx.stroke();
+        
+        // Draw star
+        this.ctx.fillStyle = '#ffd43b';
+        this.ctx.font = 'bold 28px Arial';
+        this.ctx.textAlign = 'center';
+        this.ctx.textBaseline = 'middle';
+        this.ctx.fillText('⭐', x, y);
+    }
+
+    drawRobot() {
+        const x = this.simulationState.robot_x;
+        const y = this.simulationState.robot_y;
+        const angle = this.simulationState.robot_angle;  // In radians
+        
+        // Draw pet based on selection
+        const petEmoji = {
+            'cat': '🐱',
+            'dog': '🐕',
+            'penguin': '🐧',
+            'alien': '👽',
+            'parrot': '🦜',
+            'robot_cute': '🤖'
+        }[this.currentPet];
+        
+        // Save context
+        this.ctx.save();
+        
+        // Draw robot body (circle)
+        this.ctx.fillStyle = '#51cf66';
+        this.ctx.globalAlpha = 0.2;
+        this.ctx.beginPath();
+        this.ctx.arc(x, y, 20, 0, Math.PI * 2);
+        this.ctx.fill();
+        this.ctx.globalAlpha = 1;
+        
+        // Transform to robot position and angle
+        this.ctx.translate(x, y);
+        this.ctx.rotate(angle);  // Angle is already in radians
+        
+        // Draw direction indicator (forward-facing triangle)
+        this.ctx.strokeStyle = '#51cf66';
+        this.ctx.lineWidth = 2;
+        this.ctx.beginPath();
+        this.ctx.moveTo(15, 0);      // Tip
+        this.ctx.lineTo(-10, -10);   // Left
+        this.ctx.lineTo(-10, 10);    // Right
+        this.ctx.closePath();
+        this.ctx.stroke();
+        
+        // Transform back to center (no rotation) for emoji
+        this.ctx.rotate(-angle);
+        
+        // Draw pet emoji
+        this.ctx.font = 'bold 36px Arial';
+        this.ctx.textAlign = 'center';
+        this.ctx.textBaseline = 'middle';
+        this.ctx.fillText(petEmoji, 0, 0);
+        
+        // Restore context
+        this.ctx.restore();
+    }
+
+    drawStatsOverlay() {
+        this.ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+        this.ctx.fillRect(10, 10, 220, 110);
+        
+        this.ctx.fillStyle = '#ffffff';
+        this.ctx.font = 'bold 12px Courier';
+        this.ctx.textAlign = 'left';
+        
+        this.ctx.fillText(`Time: ${this.simulationState.time.toFixed(1)}s`, 20, 30);
+        this.ctx.fillText(`Collisions: ${this.simulationState.collisions}`, 20, 50);
+        this.ctx.fillText(`Difficulty: ${this.currentDifficulty}`, 20, 70);
+        this.ctx.fillText(`Success Rate: ${((this.successCount / Math.max(1, this.totalRuns)) * 100).toFixed(0)}%`, 20, 90);
+        this.ctx.fillText(`Status: ${this.simulationState.status}`, 20, 110);
+    }
+
+    updateStatus(status) {
+        this.statusEl.textContent = status;
+    }
+
+    updateStats() {
+        this.timeEl.textContent = this.simulationState.time.toFixed(1) + 's';
+        this.collisionsEl.textContent = this.simulationState.collisions;
+        this.statusEl.textContent = this.simulationState.status || 'idle';
+        
+        if (this.totalRuns > 0) {
+            const rate = ((this.successCount / this.totalRuns) * 100).toFixed(1);
+            this.successRateEl.textContent = rate + '%';
+        }
+    }
+
+    showAbout() {
+        this.aboutModal.style.display = 'block';
+    }
+
+    closeAbout() {
+        this.aboutModal.style.display = 'none';
+    }
+
+    // Simulate collision
+    addCollision() {
+        this.collisionCount++;
+        this.collisionsEl.textContent = this.collisionCount;
+    }
+
+    // Simulate success
+    addSuccess() {
+        this.successCount++;
+        this.totalRuns++;
+        this.updateStats();
+    }
+}
+
+// Initialize app when DOM is ready
+document.addEventListener('DOMContentLoaded', () => {
+    // DEBUG: Show window.petsy status
+    console.log('=== DOM READY ===');
+    console.log('window.petsy available?', typeof window.petsy !== 'undefined');
+    if (window.petsy) {
+        console.log('window.petsy methods:', Object.keys(window.petsy));
+    } else {
+        console.error('❌ window.petsy NOT FOUND! IPC bridge not working!');
+    }
+    
+    const app = new PetsyApp();
+    
+    // Store app globally for debugging
+    window.petsyApp = app;
+    
+    // Test START button directly
+    console.log('🧪 Testing START button...');
+    window.testStartButton = async () => {
+        console.log('TEST: START button click simulation');
+        try {
+            const result = await window.petsy.startSimulation({ difficulty: 'normal' });
+            console.log('TEST: Result =', result);
+        } catch (error) {
+            console.error('TEST: Error =', error);
+        }
+    };
+    console.log('✓ Run window.testStartButton() in console to test');
+});

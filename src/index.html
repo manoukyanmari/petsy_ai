@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Petsy - Autonomous Robot Simulator</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <h1>🤖 Petsy</h1>
+                <p class="subtitle">Autonomous Robot Simulator</p>
+            </div>
+            <div class="header-version">
+                <span id="version">v1.0.0</span>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Controls Panel -->
+            <div class="controls-panel">
+                <h2>Controls</h2>
+                
+                <div class="pet-selector">
+                    <label for="pet-design">Choose Your Pet:</label>
+                    <select id="pet-design">
+                        <option value="cat">🐱 Cat</option>
+                        <option value="dog">🐕 Dog</option>
+                        <option value="penguin">🐧 Penguin</option>
+                        <option value="alien">👽 Alien</option>
+                        <option value="parrot" selected>🦜 Parrot</option>
+                        <option value="robot_cute">🤖 Cute Robot</option>
+                    </select>
+                </div>
+
+                <div class="difficulty-selector">
+                    <label for="difficulty">Difficulty:</label>
+                    <select id="difficulty">
+                        <option value="easy">Easy (3 obstacles)</option>
+                        <option value="normal" selected>Normal (7 obstacles)</option>
+                        <option value="hard">Hard (12 obstacles)</option>
+                        <option value="expert">Expert (15 obstacles)</option>
+                    </select>
+                </div>
+
+                <div class="button-group">
+                    <button id="start-btn" class="btn btn-primary">
+                        ▶ START
+                    </button>
+                    <button id="stop-btn" class="btn btn-secondary" disabled>
+                        ⏸ STOP
+                    </button>
+                    <button id="reset-btn" class="btn btn-tertiary">
+                        ↻ RESET
+                    </button>
+                </div>
+
+                <div class="stats-box">
+                    <h3>Statistics</h3>
+                    <div class="stat">
+                        <span class="stat-label">Status:</span>
+                        <span id="status" class="stat-value">Ready</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">Time:</span>
+                        <span id="time" class="stat-value">0.0s</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">Collisions:</span>
+                        <span id="collisions" class="stat-value">0</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">Success Rate:</span>
+                        <span id="success-rate" class="stat-value">—</span>
+                    </div>
+                </div>
+
+                <div class="info-box">
+                    <p>💡 <strong>Tip:</strong> Click START to begin. The robot will automatically navigate to the gold star while avoiding obstacles!</p>
+                </div>
+            </div>
+
+            <!-- Simulation Area -->
+            <div class="simulation-container">
+                <canvas id="simulation-canvas" width="800" height="600">
+                    Canvas not supported in your browser
+                </canvas>
+                <div class="canvas-placeholder">
+                    <p>🎮 Simulation will appear here</p>
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>Petsy v<span id="footer-version">1.0.0</span> | Autonomous Robot Simulator</p>
+        </footer>
+    </div>
+
+    <!-- About Modal -->
+    <div id="about-modal" class="modal">
+        <div class="modal-content">
+            <h2>About Petsy</h2>
+            <p><strong>Petsy</strong> is an autonomous robot simulator demonstrating intelligent navigation and obstacle avoidance.</p>
+            <h3>Features:</h3>
+            <ul>
+                <li>✅ Autonomous navigation with sensor-based obstacle detection</li>
+                <li>✅ 6 adorable pet designs to choose from</li>
+                <li>✅ Real-time statistics and performance tracking</li>
+                <li>✅ Customizable difficulty levels</li>
+                <li>✅ Smooth 60 FPS simulation</li>
+            </ul>
+            <h3>Technical Stack:</h3>
+            <ul>
+                <li>� Pure JavaScript (Simulation Engine)</li>
+                <li>⚛️ Electron (Desktop Application)</li>
+                <li>🎨 Canvas 2D (Rendering)</li>
+            </ul>
+            <button id="close-about" class="btn btn-primary">Close</button>
+        </div>
+    </div>
+
+    <script src="simulator.js"></script>
+    <script src="renderer.js"></script>
+</body>
+</html>
