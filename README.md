@@ -1,290 +1,211 @@
-# 🤖 Petsy - Autonomous Robot Simulator
+# Petsy - Autonomous Robot Simulator
 
-**Petsy** is a beautiful desktop application featuring an autonomous robot simulator with adorable pet designs and real-time intelligence visualization.
+Petsy is a desktop app where you can watch cute pet emojis (parrot, cat, dog, etc.) navigate around obstacles to reach a bowl. It uses pathfinding algorithms to figure out the best route, kind of like how a real robot would move around a room.
 
 ![Petsy Desktop App](https://via.placeholder.com/800x600.png?text=Petsy+Desktop+App)
 
-## ✨ Features
+## Features
 
-### 🐾 6 Adorable Pets to Choose From
-- 🐱 **Cat** - Fluffy and curious
-- 🐕 **Dog** - Joyful and energetic  
-- 🐧 **Penguin** - Cool and composed
-- 👽 **Alien** - Mysterious and cute
-- 🦜 **Parrot** - Vibrant green-cheek conure
-- 🤖 **Cute Robot** - Retro pixel style
+### 6 Different Pets
+- Cat - cute and quick
+- Dog - energetic explorer
+- Penguin - slides around smoothly
+- Alien - weird and fun
+- Parrot - colorful and smart
+- Robot - retro style
 
-### 🧠 Intelligent Navigation
-- **Dijkstra's Shortest Path Algorithm** - Optimal route planning around obstacles
-- Multi-angle sensor detection system (5 distance sensors)
-- Reactive obstacle avoidance with steering control
-- Real-time waypoint-based navigation to goal
-- Adaptive path replanning every ~1 second
-- Hybrid approach: 65% planned navigation + 35% reactive avoidance
+### Smart Navigation
+The pets aren't just moving randomly. They use an algorithm called Dijkstra's pathfinding to find the shortest route to the bowl, even with obstacles in the way. Plus, they can dodge obstacles by sensing what's around them.
 
-### ⚙️ Adjustable Difficulty
-- **Easy** - 3 obstacles
-- **Normal** - 7 obstacles (default)
-- **Hard** - 12 obstacles
-- **Expert** - 15 obstacles
+### Different Difficulty Levels
+- Easy - 3 obstacles
+- Normal - 7 obstacles (default)
+- Hard - 12 obstacles
+- Expert - 15 obstacles (brutal)
 
-### 📊 Real-Time Statistics
-- **Completion Time** - Track how fast your pet reaches the goal
-- **Collision Count** - Monitor navigation safety
-- **Success Rate** - Running performance metrics
-- **Status Display** - Current simulation state
+### See Real Stats
+- How long it took to reach the bowl
+- How many times it hit obstacles
+- Success rate across multiple runs
 
-## 📥 Installation
+## How to Install
 
-### Windows Users
-1. Download `Petsy Setup 1.0.0.exe` from releases
-2. Double-click the installer
-3. Follow the installation wizard
-4. Launch from Start Menu or desktop shortcut
-5. **To pin to taskbar**: Right-click the app → "Pin to taskbar"
+### Windows
+1. Download the .exe file
+2. Click it to install
+3. Launch from Start Menu
 
-### Mac Users
-1. Download `Petsy-1.0.0.dmg` from releases
-2. Double-click the DMG file
-3. Drag Petsy to Applications folder
-4. Launch from Applications folder
+### Mac
+1. Download the .dmg file
+2. Drag Petsy to Applications
+3. Open from Applications folder
 
-### Linux Users
-1. Download `petsy_1.0.0_amd64.deb`
-2. `sudo dpkg -i petsy_1.0.0_amd64.deb`
-3. Launch from applications menu
+### Linux
+1. Download the .deb file
+2. Run `sudo dpkg -i petsy_*.deb`
+3. Find it in your applications menu
 
-## 🎮 How to Use
+## How to Use It
 
-### Quick Start
-1. **Open Petsy** from your applications
-2. **Choose your pet** - Select from the dropdown (default: Parrot 🦜)
-3. **Set difficulty** - Pick your challenge level
-4. **Click START** - Watch your pet autonomously navigate!
-5. **Monitor stats** - See real-time performance metrics
+### Quick Steps
+1. Open Petsy
+2. Pick which pet you want
+3. Choose how hard you want it (Easy to Expert)
+4. Hit START and watch it go
+5. When it finishes, hit RESET to try a different pet or difficulty
 
-### Controls
+### What the Buttons Do
 
-| Action | How |
+| Button | What it does |
 |--------|-----|
-| **Start Simulation** | Click the "▶ START" button |
-| **Stop Simulation** | Click the "⏸ STOP" button |
-| **Reset Simulation** | Click the "↻ RESET" button |
-| **Change Pet** | Select from dropdown menu |
-| **Change Difficulty** | Adjust difficulty slider |
+| START | Makes the pet start moving toward the bowl |
+| STOP | Pauses the pet mid-navigation |
+| RESET | Clears everything and lets you start fresh |
 
-### Gameplay Flow
+### What You're Seeing
 
-1. **Choose your pet** from the dropdown (default: Parrot 🦜)
-2. **Select difficulty level** (Easy/Normal/Hard/Expert)
-3. **Click START** - Pet autonomously navigates to the bowl
-4. **Watch navigation** - Pet uses Dijkstra pathfinding + obstacle avoidance
-5. **Pet reaches bowl** 🍲 - Shows happy emoji and **stops** at goal
-6. **Click RESET** to try again with:
-   - Same pet (test different difficulties)
-   - Different pet (compare navigation styles)
-   - Different obstacles (randomized each run)
+In the main window:
+- Your pet (the emoji) - this is what you're watching
+- The goal spot with a star - where the pet needs to get to
+- Red squares - obstacles to avoid
+- The bowl (brown thing at the bottom) - the actual goal
+- Stats in the corner - time, crashes, success rate
 
-**Pro tip:** Track stats across multiple runs to see which pet/difficulty combo has the best success rate!
+When your pet reaches the bowl:
+- It stops moving
+- It shows a happy emoji (smiling cat, happy dog, etc.)
+- Stats freeze showing your final score
+- Click RESET to go again with a different pet
 
-### Understanding the Display
+## What's Actually Happening (The Algorithms)
 
-**Simulation Canvas:**
-- **🐾 Pet** - Your chosen character (animated)
-- **⭐ Gold Star** - Goal location (reach this to succeed!)
-- **🔴 Red Squares** - Obstacles to avoid
-- **🍲 Bowl** - Destination with 3D ceramic rendering
-- **📊 Stats** - Time, collisions, and status overlay
+### Dijkstra's Shortest Path
+The pet doesn't just go toward the goal randomly. It uses an algorithm that finds the actually shortest path around obstacles. Think of it like Google Maps for the bowl.
 
-**When Pet Reaches The Bowl:**
-- Pet **stops moving** (no more circling!)
-- Shows **happy/sitting emoji** (😺 for cat, 🐶 for dog, etc.)
-- Goal marker turns to success
-- Stats freeze (final time & collision count recorded)
-- Ready to RESET and try again or switch pets
+### PID Control (Steering)
+So the pet knows where to go, but it needs to actually steer correctly. PID control makes the steering smooth instead of jerky. Three parts:
+- P (Proportional) - steer more if you're far from the target
+- I (Integral) - adjust based on past mistakes
+- D (Derivative) - smooth out the movement
 
-**Statistics Panel:**
-- **Status** - Ready / Running / Stopped / Goal Reached ✓
-- **Time** - How long current simulation has been running
-- **Collisions** - Number of times pet hit obstacles
-- **Success Rate** - Percentage of successful runs
+### Obstacle Detection
+The pet has 5 fake "sensors" around it (front, sides, etc.) sensing up to 150 pixels away. When it detects something close, it steers away.
 
-## 🎓 Educational Features
+### Collision Detection
+If the pet actually hits an obstacle, we count it. We track how many times it messes up.
 
-### Core Algorithms Demonstrated:
+### Hybrid Approach
+The pet uses 65% planned pathfinding and 35% sensor-based dodging. This way it can follow the optimal path but still react if something goes wrong in real-time.
 
-#### 1. **🛤️ Dijkstra's Shortest Path Algorithm**
-- Grid-based pathfinding with 25px cells
-- 8-directional movement support (ortho + diagonal)
-- Obstacle collision detection with safety margins
-- Optimal waypoint generation
-- Time complexity: O(E log V) with priority queue
+### Why This Matters
+These are real techniques that robots and self-driving cars use. By seeing them work (or fail), you understand how real-world navigation works.
 
-#### 2. **🎯 PID Control System**
-- Proportional-Integral-Derivative heading control
-- Smooth steering toward target waypoints
-- Tuned gains: Kp=0.2, Ki=0.05, Kd=0.15
-- Eliminates oscillation and overshoot
+## System Requirements
 
-#### 3. **🚫 Collision Detection**
-- Circle-to-rectangle collision testing
-- Collision counting and debouncing (0.2s)
-- Early detection with +3px safety buffer
-- Prevents phantom multi-collisions
+- Windows 10+, Mac 10.13+, or Ubuntu 18.04+
+- 512 MB RAM minimum (1 GB is better)
+- 200 MB disk space
+- Any decent screen size (1024x768 minimum)
 
-#### 4. **📡 Sensor Simulation**
-- 5 distance sensors (front, front-left, front-right, left, right)
-- 150px detection range per sensor
-- Obstacle and boundary distance calculation
-- Reactive steering based on sensor input
+## Troubleshooting
 
-#### 5. **⚙️ Differential Drive Physics**
-- Two independent motor control model
-- 20px wheelbase for realistic turning
-- Angular and linear velocity calculations
-- Damping to canvas boundaries (35px margin)
+### App won't start
+- Restart your computer
+- Reinstall it
+- Make sure you have 500 MB free space
 
-#### 6. **🧠 Hybrid Navigation Strategy**
-- 65% weight on planned Dijkstra path
-- 35% weight on reactive obstacle avoidance
-- Combines optimality with safety
-- Adapts to dynamic environment changes
+### It's running slow
+- Close other apps
+- Try a lower difficulty setting
+- Update your graphics driver if you can
 
-### Learning Outcomes:
+### It crashed
+- Check your internet (it might need that)
+- Try reinstalling
+- Let me know what happened
 
-**Understanding Algorithms:**
-- Why is Dijkstra better than greedy/direct navigation?
-- How does grid decomposition enable pathfinding?
-- What are the trade-offs between planning and reactivity?
+### Can't pin to taskbar
+- Windows: Right-click the shortcut, hit "Pin to taskbar"
+- Mac: Drag the app to your Dock
+- Linux: Depends on what you're using
 
-**Autonomous Systems:**
-- How do robots navigate without GPS?
-- Why use multiple sensors instead of one?
-- What makes a navigation system "intelligent"?
+## Performance
 
-**Control Theory:**
-- How do PID gains affect robot behavior?
-- What causes oscillation? How to tune it out?
-- Why use integral and derivative terms?
+Tested with 100 runs:
+- Success rate: 100% (always reaches the goal)
+- Average time: 5.69 seconds
+- Slowest time: 15.35 seconds (Expert mode)
+- Runs at 60 frames per second (smooth animation)
 
-**Performance Analysis:**
-- How does difficulty affect success rate and time?
-- What metrics matter for navigation quality?
-- How to optimize for speed vs. safety?
+## Making Your Own Version
 
-### Perfect for Classwork:
-✅ Computer Science - Algorithms & Data Structures  
-✅ Robotics - Autonomous Navigation & Pathfinding  
-✅ Physics - Differential Drive Dynamics  
-✅ Control Theory - PID Controllers  
-✅ Engineering - System Integration & Testing
+Want to mess with the code?
 
-## ⚙️ System Requirements
+1. Get the code from GitHub
+2. Read README-DEV.md for setup
+3. Have Node.js and npm installed
+4. Run `npm install && npm start`
+5. Change stuff and rebuild with `npm run build`
 
-- **OS**: Windows 10+, macOS 10.13+, or Ubuntu 18.04+
-- **RAM**: 512 MB minimum (1 GB recommended)
-- **Disk**: 200 MB for installation
-- **Display**: 1024x768 resolution minimum
+Check README-DEV.md for more details.
 
-## 🔧 Troubleshooting
+## Inside the Code
 
-### "Petsy won't start"
-- Try restarting your computer
-- Reinstall the application
-- Check that you have 500 MB free disk space
+**What's being used:**
+- JavaScript - the main programming language
+- Electron - lets you make desktop apps with web code
+- Canvas - draws everything you see on screen
+- Node.js - runs the backend stuff
 
-### "Simulation runs slowly"
-- Close other applications
-- Set difficulty to "Normal" or lower
-- Update your graphics drivers
+The whole thing is about 120 MB with all the stuff it needs.
 
-### "Application crashed"
-- Check your internet connection (app validates on launch)
-- Reinstall application
-- Report issue on GitHub
+## Tips
 
-### "Can't pin to taskbar"
-- Windows: Right-click the Petsy shortcut → Pin to taskbar
-- macOS: Drag Petsy app to Dock
-- Linux: Depends on desktop environment
+### Getting Better Results
+- Start with Normal difficulty to see how it works
+- Watch how it avoids obstacles
+- Bump up the difficulty once you get it
+- Try each pet and see which one's fastest
 
-## 📊 Performance Benchmarks
+### Using It for School
+- Compare success rates across different difficulties
+- Take screenshots to show your work
+- Show your friends how robots navigate
+- Use it to explain pathfinding algorithms
 
-**Tested Scenarios (100 runs):**
-- ✅ **100% Success Rate** - Reaches goal every time  
-- ✅ **Average 5.69s** - Fast autonomous navigation
-- ✅ **Maximum 15.35s** - Even in hardest scenarios
-- ✅ **Smooth 60 FPS** - Fluid visual experience
+### Testing the Algorithm
+- Click RESET a bunch of times in a row
+- Keep track of collision counts
+- Compare times between pets
+- Write down your findings
 
-## 🛠️ For Developers
+### Known Issues
 
-Want to customize Petsy or contribute?
+- Mac M1/M2: Might need Rosetta 2
+- Linux with NVIDIA: Might need extra driver stuff
+- High DPI screens: Might look a bit weird
 
-1. **Download source code** from GitHub
-2. **Follow `README-DEV.md`** setup instructions
-3. **Install Node.js & npm**
-4. **Run `npm install && npm start`**
-5. **Modify and rebuild** with `npm run build`
+## Questions or Bugs?
 
-See [README-DEV.md](README-DEV.md) for technical details.
+- Found a problem? Make an issue on GitHub
+- Have an idea? Send a suggestion
+- Need help? Check README-DEV.md
+- Want to talk? Hit me up on GitHub
 
-## 📝 What's Inside
+## License
 
-**Technology Stack:**
-- � **JavaScript ES6+** - Simulator engine & UI
-- ⚛️ **Electron** - Desktop application framework  
-- 🎨 **Canvas 2D API** - Real-time 2D rendering
-- 💻 **Node.js** - Application runtime
+Use this however you want for school stuff. It's free.
 
-**File Size:** ~120 MB (includes all dependencies)
+## About This Project
 
-## 🌟 Tips & Tricks
-
-### Optimizing for Better Results
-- Start with "Normal" difficulty to understand the algorithm
-- Watch how the pet navigates around obstacles  
-- Increase difficulty once comfortable
-- Try different pets to see their unique visualizations
-
-### Educational Use
-- Compare success rates across difficulties
-- Screenshot results to track performance  
-- Share with classmates or colleagues
-- Explain autonomous navigation concepts visually
-
-### Performance Testing
-- Click RESET multiple times to test consistency
-- Monitor collision count trends
-- Time manual vs. automatic navigation
-- Document results for analysis
-
-## 🐛 Known Issues
-
-- **macOS M1/M2**: May require Rosetta 2 emulation
-- **Linux NVIDIA**: May need additional graphics drivers
-- **High DPI displays**: UI scaling may vary
-
-## 📞 Support & Feedback
-
-- **Issue**: Create GitHub issue with reproduction steps
-- **Suggestion**: Submit feature requests via GitHub discussions
-- **Documentation**: See in-app help or [README-DEV.md](README-DEV.md)
-- **Email**: Contact via GitHub repository
-
-## 📜 License
-
-Petsy is provided as-is for educational purposes.
-
-## 🙏 Credits
-
-**Petsy v1.0.0** created as a Desktop Robotics Simulation project demonstrating:
-- Autonomous navigation intelligence
-- Real-time visualization systems
-- Modular software architecture
-- Educational interactive applications
+Built as a Technical Leadership course project to show:
+- Autonomous navigation algorithms
+- Real-time visualization
+- Clean code structure
+- Interactive learning tools
 
 ---
 
-**Ready to see your pet navigate autonomously?** [Download Petsy Now!](https://github.com/releases)
+Ready to see a pet navigate autonomously? Download Petsy and try it out!
 
-🚀 **Install Petsy today and watch intelligent robotics in action!**
+Have fun and good luck with your project!
