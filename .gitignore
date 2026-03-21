@@ -5,6 +5,9 @@ yarn.lock
 
 # Build outputs
 dist/
+!dist/*.dmg
+!dist/*.exe
+dist/**/*.blockmap
 out/
 build/
 
