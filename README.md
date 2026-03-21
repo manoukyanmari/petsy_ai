@@ -2,7 +2,9 @@
 
 Petsy is a desktop app where you can watch cute pet emojis (parrot, cat, dog, etc.) navigate around obstacles to reach a bowl. It uses pathfinding algorithms to figure out the best route, kind of like how a real robot would move around a room.
 
-![Petsy Desktop App](https://via.placeholder.com/800x600.png?text=Petsy+Desktop+App)
+![Petsy Desktop App for Macos](https://github.com/manoukyanmari/petsy_ai/releases/download/v1.0.0/Petsy-1.0.0-arm64.dmg)
+
+![Petsy Desktop App for Windows](https://github.com/manoukyanmari/petsy_ai/releases/download/v1.0.0/Petsy.Setup.1.0.0.exe)
 
 ## Features
 
