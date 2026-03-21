@@ -30,20 +30,39 @@ The pets aren't just moving randomly. They use an algorithm called Dijkstra's pa
 
 ## How to Install
 
-### Windows
-1. Download the .exe file
-2. Click it to install
-3. Launch from Start Menu
+You have two options: download the app directly, or build it yourself from code.
 
-### Mac
-1. Download the .dmg file
-2. Drag Petsy to Applications
-3. Open from Applications folder
+### Option 1: Download Pre-Built (Easiest)
 
-### Linux
-1. Download the .deb file
-2. Run `sudo dpkg -i petsy_*.deb`
-3. Find it in your applications menu
+The app is ready to go - no coding needed.
+
+**For Mac:**
+1. Download `Petsy-1.0.0-arm64.dmg` from the dist folder
+2. Double-click the DMG file
+3. Drag Petsy to Applications folder
+4. Done! Open it from Applications
+
+**For Windows:**
+1. Download `Petsy Setup 1.0.0.exe` from the dist folder
+2. Run the installer
+3. Click through the setup (pretty standard stuff)
+4. Done! Find it in your Start menu as "Petsy"
+
+### Option 2: Build From Source
+
+Want to mess with the code? Build it yourself.
+
+**What You Need First:**
+- Node.js and npm (download from nodejs.org)
+- Git (to clone the repo)
+
+**Steps (All Platforms):**
+1. Clone or download this repo
+2. Open a terminal in the project folder
+3. Run `npm install` (installs dependencies)
+4. Run `npm start` (launches the app)
+
+That's it! The app should open and you're ready to go.
 
 ## How to Use It
 
@@ -139,13 +158,13 @@ Tested with 100 runs:
 
 ## Making Your Own Version
 
-Want to mess with the code?
+Want to mess with the code and rebuild the installers?
 
 1. Get the code from GitHub
-2. Read README-DEV.md for setup
-3. Have Node.js and npm installed
-4. Run `npm install && npm start`
-5. Change stuff and rebuild with `npm run build`
+2. Have Node.js and npm installed
+3. Run `npm install && npm start` to test changes locally
+4. When ready, run `npm run build` to generate new installers
+5. Your new DMG and EXE files go in the `dist/` folder
 
 Check README-DEV.md for more details.
 
